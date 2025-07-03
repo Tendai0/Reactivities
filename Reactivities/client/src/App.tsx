@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 
 function App() {
  const [activities, setReactivities] = useState<Activity[]>([]);
+
  useEffect(() => {
    axios.get<Activity[]>('https://localhost:5001/api/activities')
      .then(response => setReactivities(response.data))
      .catch(error => console.error('Error fetching reactivities:', error));
- }, []);
-  return (
-      
+ },[]);
+
+  return (   
       <>
          <Typography variant='h3'>Reactivities</Typography>
          <List>
