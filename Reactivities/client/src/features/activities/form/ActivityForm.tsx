@@ -5,15 +5,14 @@ import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { useActivities } from "../../../lib/hooks/useActivities";
 import type { FormEvent } from "react";
+import { useNavigate, useParams } from "react-router";
 
-type Props = {
-    activity?: Activity;
-    closeForm?: () => void;
-  
-};
 
-export default function ActivityForm({ activity, closeForm }: Props) {
-    const { updateActivity , createActivity } = useActivities();
+
+export default function ActivityForm() {
+    const {id}=useParams();
+    const { updateActivity , createActivity, activity ,IsLoadingActivity} = useActivities(id);
+    const navigate = useNavigate();
 
     const handleSubmit =async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -26,7 +25,6 @@ export default function ActivityForm({ activity, closeForm }: Props) {
 
        if (activity) {
     activityData.id = activity.id; // Preserve the ID
-
     // Merge the non-form fields from existing activity
     const completeActivity: Activity = {
         ...activity,
@@ -35,21 +33,37 @@ export default function ActivityForm({ activity, closeForm }: Props) {
         longitude: activity.longitude,
         isCancelled: activity.isCancelled ?? false
     };
-
-    await updateActivity.mutateAsync(completeActivity);
-    closeForm?.();
-}
-else {
-            // Handle creation logic here if needed
-            await createActivity.mutateAsync(activityData as unknown as Activity);
-            closeForm?.();          
-        }
+        await updateActivity.mutateAsync(completeActivity as unknown as Activity);
+        navigate(`/activities/${activity.id}`); // Navigate to the updated activity details
+    } else {
+       const newActivity: Omit<Activity, "id"> = {
+    title: activityData.title as string,
+    description: activityData.description as string,
+    category: activityData.category as string,
+    date: activityData.date as string,
+    city: activityData.city as string,
+    venue: activityData.venue as string,
+    latitude: 0, // default or real geolocation
+    longitude: 0,
+    isCancelled: false,
+};
+        // Handle creation logic here if needed
+       createActivity.mutate(newActivity as Activity, {
+    onSuccess: (createdActivity) => {
+        navigate(`/activities/${createdActivity.id}`);
+    },
+    onError: (error) => {
+        console.error("Error creating activity:", error);
+    },
+});
+    }
     };
+     if(IsLoadingActivity) return <Typography>Loading...</Typography>;
 
     return (
         <Paper sx={{ padding: 4, borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h4" color="primary" gutterBottom>
-                Activity Form
+                {activity ? "Edit Activity" : "Create Activity"}
             </Typography>
             <Box
                 component="form"
@@ -117,7 +131,7 @@ else {
                     sx={{ marginBottom: 2 }}
                 />
                 <Box display="flex" justifyContent="flex-end" gap={2}>
-                    <Button onClick={closeForm} color="secondary">
+                    <Button color="secondary">
                         Cancel
                     </Button>
                     <Button 

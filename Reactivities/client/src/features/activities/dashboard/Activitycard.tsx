@@ -1,14 +1,14 @@
 import { Button, Card, CardActions, CardContent, Chip, Typography,Box } from "@mui/material";
 import { useActivities } from "../../../lib/hooks/useActivities";
+import { useNavigate } from "react-router";
 
 type Props ={
     activity: Activity
-     SelectActivity: (id: string) => void;
-     
     };
 
-export default function ActivityCard({activity, SelectActivity, }: Props) {
+export default function ActivityCard({activity }: Props) {
   const { deleteActivity } = useActivities();
+  const navigate = useNavigate();
   return (
     <Card sx={{borderRadius: 2, padding: 2, marginBottom: 2 }}>
         <CardContent>
@@ -28,7 +28,7 @@ export default function ActivityCard({activity, SelectActivity, }: Props) {
                    color="error"
                    disabled={deleteActivity.isPending}
                    >Delete</Button>
-                  <Button onClick={() => SelectActivity(activity.id)} size="medium" variant="contained">View Details</Button>
+                  <Button onClick={() => navigate(`/activities/${activity.id}`)} size="medium" variant="contained">View Details</Button>
                 </Box>            
         </CardActions>
     </Card>

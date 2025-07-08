@@ -2,14 +2,24 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import agent from "../api/agent";
 import axios from "axios";
 
-export const useActivities = () => {
+export const useActivities = (id?: string) => {
     const queryClient = useQueryClient();
+
     const {data:activities,isPending} =useQuery({
         queryKey: ['activities'],
         queryFn: async () => {
             const response = await agent.get<Activity[]>('/activities');
             return response.data;
         },
+    });
+
+    const {data:activity,isLoading:IsLoadingActivity} = useQuery({
+        queryKey: ['activities',id],
+        queryFn: async () => {
+            const response = await agent.get<Activity>(`/activities/${id}`);
+            return response.data;
+        },
+        enabled: !!id, // Only run this query if id is defined
     });
     const updateActivity = useMutation({
        mutationFn: async (activity: Activity) => {
@@ -32,7 +42,9 @@ export const useActivities = () => {
 
     const createActivity = useMutation({
         mutationFn: async (activity: Activity) => {
-            await agent.post('/activities', activity);
+            const response = await agent.post('/activities', activity);
+            console.log('Activity created:', response.data);
+            return response.data;
         },
         onSuccess: async () => {
             // Invalidate the activities query to refetch the updated data
@@ -49,5 +61,5 @@ export const useActivities = () => {
         }
     });
 
-    return { activities, isPending, updateActivity, createActivity , deleteActivity };
+    return { activities, isPending, updateActivity, createActivity , deleteActivity, activity, IsLoadingActivity };
 }
